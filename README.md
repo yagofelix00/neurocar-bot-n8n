@@ -61,19 +61,31 @@ com fluxo completo de vendas automatizadas e handoff para consultor humano.
 
 ## 📌 Próximos passos (evoluções planejadas)
 
-Algumas melhorias já estavam mapeadas no desenho da solução, mas não foram
-implementadas nesta versão por limitação de tempo, mantendo o foco no fluxo
-principal de vendas.
+Este projeto foi pensado de forma modular e escalável. Algumas evoluções naturais foram mapeadas, mas não implementadas neste MVP para manter o foco no fluxo principal de vendas e handoff.
 
 Entre elas:
 
-- Persistir leads em banco de dados
-- Integração com CRM (ex: HubSpot, Pipedrive)
-- Inventário dinâmico via API externa
-- Dashboard de acompanhamento de vendas
-- **Notificação ativa do consultor humano no momento do handoff**  
-  (ex: envio automático de mensagem via Telegram, Slack ou Webhook com os dados
-  do cliente e contexto da negociação)
+- 📊 Persistência de leads (ex: Google Sheets, banco de dados ou CRM)
+
+- 🔔 Notificação ativa do consultor humano no momento do handoff
+
+Envio automático de mensagem com nome, contato, orçamento e carro de interesse
+
+Continuidade do atendimento diretamente via WhatsApp
+
+
+- 📅 Controle centralizado de agendamentos de test drive
+
+Evitar marcação do mesmo veículo no mesmo horário
+
+Visão única de agenda por carro/data
+
+
+- 🔁 Estratégias de follow-up para leads que não fecharam no primeiro contato
+
+- 📈 Dashboard de acompanhamento do funil de vendas
+
+- 🔌 Integração com CRMs (ex: HubSpot, Pipedrive
 
 Essas evoluções foram pensadas para uma próxima iteração do projeto, caso ele
 fosse levado para um ambiente de produção real.
