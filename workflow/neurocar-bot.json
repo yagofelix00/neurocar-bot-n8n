@@ -1,0 +1,672 @@
+{
+  "name": "MVP-car-ofc01",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "02bd54f3-526b-483f-a37c-7a0137bd3c44",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -10512,
+        448
+      ],
+      "webhookId": "6aaacdc1-f5ff-4dee-a94a-d225b2c9e780",
+      "credentials": {
+        "telegramApi": {
+          "id": "IM5BqmXiVPb0W0BL",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "sessionId",
+              "value": "={{ 'telegram_' + $json.message.chat.id }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "userId",
+              "value": "={{ $json.message.from.id }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "userName",
+              "value": "={{ $json.message.from.first_name + ' ' + ($json.message.from.last_name || '') }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "timestamp",
+              "value": "={{ new Date().toISOString() }}",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "chatId",
+              "value": "={{ $json.message.chat.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d6bb7bed-1e45-4107-bdc9-64ddd68373b3",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -10288,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "userMessage",
+              "value": "={{ $node[\"Telegram Trigger\"].json.message.text || $node[\"Telegram Trigger\"].json.message.caption || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "chatId",
+              "value": "={{ $node[\"Telegram Trigger\"].json.message.chat.id }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "userId",
+              "value": "={{ $('Workflow Configuration').item.json.userId }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "userName",
+              "value": "={{ $('Workflow Configuration').item.json.userName }}",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "sessionId",
+              "value": "={{ $('Workflow Configuration').item.json.sessionId }}",
+              "type": "string"
+            },
+            {
+              "id": "id-6",
+              "name": "timestamp",
+              "value": "={{ $('Workflow Configuration').item.json.timestamp }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "af3e617a-4c80-4737-9293-d91f5c767b5f",
+      "name": "Extract Message Context",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -10064,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Telegram Trigger').item.json.message.text }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=Você é um VENDEDOR de uma concessionária, atendendo clientes via Telegram.\n\nREGRA CRÍTICA — OBRIGATÓRIA\n\n\nVocê DEVE responder com EXATAMENTE 1 único objeto JSON por mensagem.\n\nÉ PROIBIDO retornar 2 JSONs, listas de JSON, ou qualquer texto fora do JSON.\n\nNunca envie “vou buscar…” separado. Faça uma única resposta final já com as opções.\n\nSempre que o cliente pedir carros disponíveis, mencionar orçamento,\ntipo de carro ou modelos:\n\nVOCÊ DEVE obrigatoriamente chamar a ferramenta \"Buscar_Inventario\"\nantes de responder.\n\nVocê deve enviar para a ferramenta:\n- tipo (string)\n- preco_max (number)\n\nÉ PROIBIDO responder sem consultar a ferramenta.\n\nIMPORTANTE:\nVocê possui acesso a um inventário de veículos em formato JSON fornecido como entrada do fluxo.\nVocê DEVE usar EXCLUSIVAMENTE esse inventário para recomendar carros.\nÉ PROIBIDO inventar modelos, preços, anos ou marcas que não existam no inventário recebido.\nÉ PROIBIDO mencionar erro, falha, problemas técnicos ou acesso ao inventário.\nSe nenhum carro atender exatamente, use o resultado do tool e ofereça o mais próximo, explicando a diferença de preço.\n\n\n--------------------------------------------------\n🔒 REGRA CRÍTICA DE USO DE INVENTÁRIO (OBRIGATÓRIA)\n--------------------------------------------------\n\nSempre que o cliente:\n- pedir carros disponíveis\n- informar orçamento e tipo (ex: “sedan até 400 mil”)\n- citar marcas ou modelos\n- pedir opções, comparações ou sugestões\n\nVOCÊ DEVE OBRIGATORIAMENTE consultar o INVENTÁRIO recebido antes de responder.\n\nÉ PROIBIDO responder sem considerar os dados do inventário.\n\nSe não houver um item exato que atenda ao pedido:\n- ofereça o(s) item(ns) mais próximo(s) do inventário\n- explique brevemente o motivo da recomendação\n- conduza a conversa adiante\n\n--------------------------------------------------\nREGRA DE AGENDAMENTO (CRÍTICA):\n--------------------------------------------------\nSe o cliente pedir visita / test drive / ir na loja / agendar, antes de confirmar data e hora você DEVE garantir o credenciamento mínimo:\n\nnome + (telefone OU email)\n\nPergunte 1 item por vez.\n\nSó depois peça data e horário.\n\nNão diga “agendei” se não existir integração de agenda (diga “vou reservar/confirmar com a equipe”).\n\n--------------------------------------------------\n🎯 OBJETIVO PRINCIPAL\n--------------------------------------------------\n\n1) Qualificar o lead (credenciamento)\n2) Recomendar carros DO INVENTÁRIO\n3) Conduzir a conversa para FECHAMENTO\n4) Quando o cliente pedir “consultor humano”, “falar com atendente”, “fechar” ou “pagamento”,\n   executar HANDOFF para humano e encerrar sua atuação.\n\n--------------------------------------------------\n📊 ETAPAS DO FUNIL (NUNCA VOLTE ETAPAS)\n--------------------------------------------------\n\nA) Credenciamento  \n   Coletar apenas uma vez:\n   - Nome\n   - Telefone OU Email\n   - Orçamento\n   - Tipo de carro (sedan, SUV, hatch, etc)\n\nB) Navegação  \n   - Listar opções do INVENTÁRIO compatíveis com orçamento e tipo\n   - Perguntar preferência (1 pergunta por mensagem)\n\nC) Simulação  \n   - Confirmar modelo escolhido\n   - Perguntar valor de entrada\n   - Informar parcelas estimadas (simples e direta)\n   - Verificar intenção de compra\n\nD) Fechamento  \n   - Confirmar resumo da compra\n   - Perguntar: “Prefere falar com um consultor humano para finalizar o pagamento?”\n\nE) Handoff  \n   - Quando o cliente solicitar humano ou confirmar fechamento,\n     responder com mensagem de transferência e encerrar sua parte.\n\n--------------------------------------------------\n💬 REGRAS DE QUALIDADE (OBRIGATÓRIAS)\n--------------------------------------------------\n\n- Faça no máximo 1 pergunta por mensagem\n- Respostas curtas, diretas e comerciais\n- Nunca repita perguntas já respondidas (use a memória)\n- Nunca peça nome, contato, orçamento ou tipo se já estiverem salvos\n- NÃO mencione erro, falha, dificuldade técnica ou inventário indisponível\n- Sempre conduza para a próxima etapa com CTA claro\n\n--------------------------------------------------\n🛠️ TRATAMENTO DE OBJEÇÕES (USO OBRIGATÓRIO)\n--------------------------------------------------\n\n- Preço: destaque benefícios + alternativa mais barata + possibilidade de entrada/parcelas\n- Marca/Modelo: ofereça até 2 opções comparáveis do inventário\n- “Vou pensar”: ofereça reserva, test drive ou esclareça a dúvida pendente\n- Urgência: proponha próximo passo (agendamento ou fechamento)\n\n--------------------------------------------------\n📦 INVENTÁRIO DISPONÍVEL (JSON)\n--------------------------------------------------\n\n{{ JSON.stringify($json.inventory) }}\n\n--------------------------------------------------\n📤 FORMATO DE SAÍDA (OBRIGATÓRIO)\n--------------------------------------------------\n\nResponda SEMPRE e SOMENTE em JSON:\n\n{\n  \"message\": \"texto da resposta ao cliente\",\n  \"handoff\": false\n}\n\nQuando houver handoff para humano:\n\n{\n  \"message\": \"mensagem de transferência para o consultor humano\",\n  \"handoff\": true\n}\n\nBLOCO ANTI-VAZAMENTO (OBRIGATÓRIO):\n- NUNCA mostre JSON, parâmetros, logs, tool input/output ou qualquer dado técnico ao cliente.\n- Sua resposta FINAL deve ser SOMENTE um JSON válido, em UMA ÚNICA LINHA, neste formato:\n{\"message\":\"...\",\"handoff\":false}\n- É PROIBIDO incluir qualquer texto fora desse JSON (sem markdown, sem quebras extras, sem objetos adicionais).\n- Ao chamar a ferramenta Buscar_Inventario, use o resultado internamente e responda apenas no campo \"message\".\n\nREGRA DE TOOL (CRÍTICA):\n\nAo chamar a ferramenta Buscar_Inventario, envie SEMPRE os parâmetros com estes nomes EXATOS:\n\ntipo (string)\n\npreco_max (number, com underscore)\n\nmodelo (opcional)\n\nano_min (opcional)\n\nÉ PROIBIDO usar precomax (sem underscore).\n\nREGRA DE INVENTÁRIO (CRÍTICA):\n\nÉ PROIBIDO listar qualquer carro que não esteja em results retornado pela ferramenta.\n\nÉ PROIBIDO listar qualquer carro com preço maior que preco_max.\n\nSe results vier vazio: diga que não há opções e peça apenas 1 coisa (trocar tipo OU aumentar orçamento)."
+        }
+      },
+      "id": "16ca79c8-205e-4954-8166-1a93138c0e48",
+      "name": "Sales AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -9568,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Extract Message Context').item.json.sessionId }}",
+        "contextWindowLength": 10
+      },
+      "id": "e9a940ef-227f-484d-9881-9fd2bf4b977e",
+      "name": "Conversation Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -9504,
+        656
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"required\": [\"message\", \"stage\", \"customer_data\"],\n  \"properties\": {\n    \"message\": {\n      \"type\": \"string\",\n      \"description\": \"Mensagem a ser enviada ao cliente\"\n    },\n    \"stage\": {\n      \"type\": \"string\",\n      \"enum\": [\"CREDENTIALING\", \"BROWSING\", \"SIMULATION\", \"READY_TO_CLOSE\", \"HUMAN_HANDOFF\"],\n      \"description\": \"Estagio atual da venda no funil\"\n    },\n    \"customer_data\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"nome\": {\n          \"type\": [\"string\", \"null\"],\n          \"description\": \"Nome completo do cliente\"\n        },\n        \"telefone\": {\n          \"type\": [\"string\", \"null\"],\n          \"description\": \"Telefone do cliente\"\n        },\n        \"email\": {\n          \"type\": [\"string\", \"null\"],\n          \"description\": \"Email do cliente\"\n        },\n        \"orcamento\": {\n          \"type\": [\"number\", \"null\"],\n          \"description\": \"Orcamento maximo do cliente em reais\"\n        },\n        \"tipo_carro\": {\n          \"type\": [\"string\", \"null\"],\n          \"description\": \"Tipo de veiculo de interesse (sedan, SUV, hatch, esportivo, etc)\"\n        },\n        \"carros_interesse\": {\n          \"type\": \"array\",\n          \"items\": {\"type\": \"string\"},\n          \"description\": \"Lista de modelos de veiculos que o cliente demonstrou interesse\"\n        },\n        \"modelo_escolhido\": {\n          \"type\": [\"string\", \"null\"],\n          \"description\": \"Modelo especifico escolhido pelo cliente\"\n        },\n        \"valor_entrada\": {\n          \"type\": [\"number\", \"null\"],\n          \"description\": \"Valor de entrada proposto pelo cliente\"\n        },\n        \"objecoes\": {\n          \"type\": \"array\",\n          \"items\": {\"type\": \"string\"},\n          \"description\": \"Objecoes ou preocupacoes levantadas pelo cliente\"\n        },\n        \"sinais_compra\": {\n          \"type\": [\"integer\", \"null\"],\n          \"minimum\": 0,\n          \"maximum\": 10,\n          \"description\": \"Nivel de intencao de compra de 0 a 10\"\n        },\n        \"preferencias\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"cor\": {\"type\": [\"string\", \"null\"]},\n            \"cambio\": {\"type\": [\"string\", \"null\"]},\n            \"combustivel\": {\"type\": [\"string\", \"null\"]},\n            \"ano_minimo\": {\"type\": [\"integer\", \"null\"]},\n            \"km_maximo\": {\"type\": [\"integer\", \"null\"]}\n          },\n          \"description\": \"Preferencias especificas do cliente\"\n        },\n        \"notas\": {\n          \"type\": [\"string\", \"null\"],\n          \"description\": \"Notas adicionais sobre a interacao e contexto\"\n        },\n        \"human_handoff_reason\": {\n          \"type\": [\"string\", \"null\"],\n          \"description\": \"Razao especifica para transferencia para atendimento humano\"\n        }\n      }\n    }\n  }\n}"
+      },
+      "id": "1ee5a7b2-3978-41c8-bf84-be34c873ef8f",
+      "name": "Extract Customer Data",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -9840,
+        656
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.extracted.stage }}",
+                    "rightValue": "CREDENTIALING",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "79e3746c-9277-4548-b59c-d3c55caa95f7"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Credentialing"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.extracted.stage }}",
+                    "rightValue": "BROWSING",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "77ec90ce-45f9-4f79-86f4-37e31c0a640e"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Browsing"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.extracted.stage }}",
+                    "rightValue": "READY_TO_CLOSE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "8deeb886-f529-417c-9cd1-b48d50aabf43"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Ready to Close"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.extracted.stage }}",
+                    "rightValue": "HUMAN_HANDOFF",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "da7be727-2e3a-4815-b112-69a24d754fd3"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Human Handoff"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fe7bd503-619d-4612-a585-a6f9d3e586da",
+      "name": "Route by Sales Stage",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -9120,
+        704
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "<__PLACEHOLDER_VALUE__WEBHOOK_URL_FOR_HUMAN_AGENT_NOTIFICATION__>",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chatId\": {{ $('Telegram Trigger').item.json.message.chat.id }},\n  \"userId\": {{ $('Workflow Configuration').item.json.userId }},\n  \"userName\": \"{{ $('Workflow Configuration').item.json.userName }}\",\n  \"userMessage\": \"{{ $('Extract Message Context').item.json.userMessage }}\",\n  \"timestamp\": \"{{ $('Workflow Configuration').item.json.timestamp }}\",\n  \"handoffReason\": \"Customer requested human agent\",\n  \"sessionId\": \"{{ $('Workflow Configuration').item.json.sessionId }}\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "080ac4b9-92ca-41b5-b512-045a2ba82574",
+      "name": "Notify Human Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -8928,
+        304
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{\n(() => {\n  // tenta vários lugares comuns onde o n8n/agent costuma guardar a resposta\n  const candidates = [\n    $json.message,\n    $json.mensagem,\n\n    $json.output?.message,\n    $json.output?.mensagem,\n\n    $json.output,              // pode ser string JSON ou objeto\n    $json.response,\n    $json.result,\n    $json.data,\n\n    $json.output?.output,      // às vezes vem “output dentro de output”\n    $json.output?.data,\n  ];\n\n  for (const v of candidates) {\n    if (v == null) continue;\n\n    // objeto direto\n    if (typeof v === \"object\") {\n      const m = v.message ?? v.mensagem;\n      if (m) return String(m);\n      // se for objeto mas não tiver message, tenta stringificar\n      try { return JSON.stringify(v); } catch(e) {}\n    }\n\n    // string (às vezes já é o texto final, às vezes é JSON)\n    if (typeof v === \"string\") {\n      const s = v.trim();\n      if (!s) continue;\n\n      // se parecer JSON, tenta parse\n      if ((s.startsWith(\"{\") && s.endsWith(\"}\")) || (s.startsWith(\"[\") && s.endsWith(\"]\"))) {\n        try {\n          const o = JSON.parse(s);\n          const m = o?.message ?? o?.mensagem;\n          if (m) return String(m);\n        } catch (e) {\n          // se falhar, devolve a string mesmo\n          return s;\n        }\n      }\n\n      return s;\n    }\n  }\n\n  // fallback (nunca deixa vazio)\n  return \"Ok! Como posso ajudar?\";\n})()\n}}\n",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "4e3e4562-a7c7-48cb-aa95-dcc4bfb119fa",
+      "name": "Send Response to Customer",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -8880,
+        560
+      ],
+      "webhookId": "be38ff8d-89b1-46b6-96ee-d3422f29840f",
+      "credentials": {
+        "telegramApi": {
+          "id": "JTO72Ueaqm4PfJ8N",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Perfeito! Já chamei um consultor humano ✅ Ele continua com você por aqui em instantes.",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "b528c1d3-3bdc-495f-9e41-24dd0b509539",
+      "name": "Confirm Handoff to Customer",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -8704,
+        320
+      ],
+      "webhookId": "f844ac9a-ff5f-4762-992c-6e42179df090",
+      "credentials": {
+        "telegramApi": {
+          "id": "JTO72Ueaqm4PfJ8N",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "inventory",
+              "value": "=[\n  {\n    \"modelo\": \"Volkswagen Gol 1.6\",\n    \"preco\": 55000,\n    \"ano\": 2019,\n    \"km\": 78000,\n    \"cambio\": \"manual\",\n    \"cor\": \"branco\",\n    \"combustivel\": \"flex\",\n    \"tipo\": \"hatch\",\n    \"destaque\": \"hatch compacto confiável, manutenção barata e ótimo para uso urbano\"\n  },\n  {\n    \"modelo\": \"Fiat Argo Trekking\",\n    \"preco\": 72000,\n    \"ano\": 2020,\n    \"km\": 60000,\n    \"cambio\": \"manual\",\n    \"cor\": \"cinza\",\n    \"combustivel\": \"flex\",\n    \"tipo\": \"hatch\",\n    \"destaque\": \"design moderno com suspensão elevada e bom consumo\"\n  },\n  {\n    \"modelo\": \"Chevrolet Onix Plus LT\",\n    \"preco\": 78000,\n    \"ano\": 2021,\n    \"km\": 52000,\n    \"cambio\": \"manual\",\n    \"cor\": \"prata\",\n    \"combustivel\": \"flex\",\n    \"tipo\": \"sedan\",\n    \"destaque\": \"sedan compacto econômico e confortável para o dia a dia\"\n  },\n  {\n    \"modelo\": \"Hyundai HB20 Platinum\",\n    \"preco\": 85000,\n    \"ano\": 2021,\n    \"km\": 43000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"preto\",\n    \"combustivel\": \"flex\",\n    \"tipo\": \"hatch\",\n    \"destaque\": \"pacote completo de tecnologia e bom desempenho urbano\"\n  },\n  {\n    \"modelo\": \"Volkswagen Virtus Highline\",\n    \"preco\": 105000,\n    \"ano\": 2022,\n    \"km\": 38000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"branco\",\n    \"combustivel\": \"flex\",\n    \"tipo\": \"sedan\",\n    \"destaque\": \"sedan espaçoso com ótimo desempenho e segurança\"\n  },\n  {\n    \"modelo\": \"Toyota Corolla GLi\",\n    \"preco\": 135000,\n    \"ano\": 2021,\n    \"km\": 45000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"prata\",\n    \"combustivel\": \"flex\",\n    \"tipo\": \"sedan\",\n    \"destaque\": \"referência em conforto, durabilidade e baixo custo de manutenção\"\n  },\n  {\n    \"modelo\": \"Honda Civic EX\",\n    \"preco\": 145000,\n    \"ano\": 2020,\n    \"km\": 52000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"preto\",\n    \"combustivel\": \"flex\",\n    \"tipo\": \"sedan\",\n    \"destaque\": \"sedan médio com ótimo conjunto mecânico e dirigibilidade\"\n  },\n  {\n    \"modelo\": \"Jeep Renegade Longitude\",\n    \"preco\": 125000,\n    \"ano\": 2022,\n    \"km\": 32000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"verde\",\n    \"combustivel\": \"flex\",\n    \"tipo\": \"suv\",\n    \"destaque\": \"suv compacto com boa robustez e conforto urbano\"\n  },\n  {\n    \"modelo\": \"Volkswagen T-Cross Comfortline\",\n    \"preco\": 140000,\n    \"ano\": 2022,\n    \"km\": 29000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"cinza\",\n    \"combustivel\": \"flex\",\n    \"tipo\": \"suv\",\n    \"destaque\": \"suv compacto moderno com bom desempenho e tecnologia\"\n  },\n  {\n    \"modelo\": \"Chevrolet Tracker Premier\",\n    \"preco\": 155000,\n    \"ano\": 2023,\n    \"km\": 21000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"branco\",\n    \"combustivel\": \"flex\",\n    \"tipo\": \"suv\",\n    \"destaque\": \"suv tecnológico com motor turbo e ótima conectividade\"\n  },\n  {\n    \"modelo\": \"Toyota Corolla Cross XRE\",\n    \"preco\": 175000,\n    \"ano\": 2022,\n    \"km\": 34000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"prata\",\n    \"combustivel\": \"flex\",\n    \"tipo\": \"suv\",\n    \"destaque\": \"suv médio confiável com bom consumo e conforto\"\n  },\n  {\n    \"modelo\": \"Honda HR-V Touring\",\n    \"preco\": 165000,\n    \"ano\": 2022,\n    \"km\": 30000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"azul\",\n    \"combustivel\": \"flex\",\n    \"tipo\": \"suv\",\n    \"destaque\": \"suv com acabamento refinado e pacote de segurança completo\"\n  },\n  {\n    \"modelo\": \"BMW 320i Sport\",\n    \"preco\": 210000,\n    \"ano\": 2020,\n    \"km\": 55000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"preto\",\n    \"combustivel\": \"gasolina\",\n    \"tipo\": \"sedan\",\n    \"destaque\": \"sedan premium com tração traseira e excelente dirigibilidade\"\n  },\n  {\n    \"modelo\": \"Mercedes-Benz C180\",\n    \"preco\": 225000,\n    \"ano\": 2020,\n    \"km\": 48000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"branco\",\n    \"combustivel\": \"gasolina\",\n    \"tipo\": \"sedan\",\n    \"destaque\": \"sedan de luxo com conforto e acabamento refinado\"\n  },\n  {\n    \"modelo\": \"Audi A4 Prestige\",\n    \"preco\": 245000,\n    \"ano\": 2021,\n    \"km\": 41000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"cinza\",\n    \"combustivel\": \"gasolina\",\n    \"tipo\": \"sedan\",\n    \"destaque\": \"sedan premium com tecnologia e excelente desempenho\"\n  },\n  {\n    \"modelo\": \"Volvo XC40 T5\",\n    \"preco\": 265000,\n    \"ano\": 2021,\n    \"km\": 39000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"branco\",\n    \"combustivel\": \"gasolina\",\n    \"tipo\": \"suv\",\n    \"destaque\": \"suv premium com foco em segurança e conforto\"\n  },\n  {\n    \"modelo\": \"Jeep Compass Limited\",\n    \"preco\": 185000,\n    \"ano\": 2022,\n    \"km\": 36000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"preto\",\n    \"combustivel\": \"diesel\",\n    \"tipo\": \"suv\",\n    \"destaque\": \"suv médio robusto com bom desempenho e tração integral\"\n  },\n  {\n    \"modelo\": \"Audi Q3 Black\",\n    \"preco\": 285000,\n    \"ano\": 2022,\n    \"km\": 28000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"cinza\",\n    \"combustivel\": \"gasolina\",\n    \"tipo\": \"suv\",\n    \"destaque\": \"suv premium compacto com visual esportivo\"\n  },\n  {\n    \"modelo\": \"BMW X1 SDrive\",\n    \"preco\": 295000,\n    \"ano\": 2022,\n    \"km\": 26000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"branco\",\n    \"combustivel\": \"gasolina\",\n    \"tipo\": \"suv\",\n    \"destaque\": \"suv premium com bom espaço interno e conforto\"\n  },\n  {\n    \"modelo\": \"Mercedes-Benz GLA 200\",\n    \"preco\": 310000,\n    \"ano\": 2023,\n    \"km\": 19000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"preto\",\n    \"combustivel\": \"gasolina\",\n    \"tipo\": \"suv\",\n    \"destaque\": \"suv compacto de luxo com design moderno\"\n  },\n  {\n    \"modelo\": \"Toyota Hilux SRX\",\n    \"preco\": 320000,\n    \"ano\": 2021,\n    \"km\": 60000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"branco\",\n    \"combustivel\": \"diesel\",\n    \"tipo\": \"picape\",\n    \"destaque\": \"picape robusta com alto valor de revenda\"\n  },\n  {\n    \"modelo\": \"Ford Bronco Sport\",\n    \"preco\": 330000,\n    \"ano\": 2022,\n    \"km\": 35000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"verde\",\n    \"combustivel\": \"gasolina\",\n    \"tipo\": \"suv\",\n    \"destaque\": \"suv com proposta aventureira e tração 4x4\"\n  },\n  {\n    \"modelo\": \"Audi A5 Sportback\",\n    \"preco\": 370000,\n    \"ano\": 2021,\n    \"km\": 42000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"cinza\",\n    \"combustivel\": \"gasolina\",\n    \"tipo\": \"coupe\",\n    \"destaque\": \"design esportivo com conforto de sedan\"\n  },\n  {\n    \"modelo\": \"BMW 330e M Sport\",\n    \"preco\": 420000,\n    \"ano\": 2022,\n    \"km\": 24000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"preto\",\n    \"combustivel\": \"hibrido\",\n    \"tipo\": \"sedan\",\n    \"destaque\": \"sedan híbrido com excelente desempenho e eficiência\"\n  },\n  {\n    \"modelo\": \"Mercedes-Benz GLC 300\",\n    \"preco\": 450000,\n    \"ano\": 2022,\n    \"km\": 29000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"branco\",\n    \"combustivel\": \"gasolina\",\n    \"tipo\": \"suv\",\n    \"destaque\": \"suv médio premium com conforto e tecnologia\"\n  },\n  {\n    \"modelo\": \"Porsche Macan\",\n    \"preco\": 520000,\n    \"ano\": 2021,\n    \"km\": 41000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"preto\",\n    \"combustivel\": \"gasolina\",\n    \"tipo\": \"suv\",\n    \"destaque\": \"suv esportivo com dinâmica de condução excepcional\"\n  },\n  {\n    \"modelo\": \"Jaguar F-Pace R-Dynamic\",\n    \"preco\": 560000,\n    \"ano\": 2022,\n    \"km\": 33000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"azul\",\n    \"combustivel\": \"gasolina\",\n    \"tipo\": \"suv\",\n    \"destaque\": \"suv premium com design esportivo e desempenho elevado\"\n  },\n  {\n    \"modelo\": \"BMW X5 xDrive\",\n    \"preco\": 620000,\n    \"ano\": 2022,\n    \"km\": 28000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"preto\",\n    \"combustivel\": \"diesel\",\n    \"tipo\": \"suv\",\n    \"destaque\": \"suv de luxo com excelente espaço e conforto\"\n  },\n  {\n    \"modelo\": \"Audi Q7 Performance\",\n    \"preco\": 680000,\n    \"ano\": 2022,\n    \"km\": 26000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"branco\",\n    \"combustivel\": \"gasolina\",\n    \"tipo\": \"suv\",\n    \"destaque\": \"suv grande com sete lugares e alto nível de conforto\"\n  },\n  {\n    \"modelo\": \"Porsche Cayenne\",\n    \"preco\": 780000,\n    \"ano\": 2022,\n    \"km\": 24000,\n    \"cambio\": \"automatico\",\n    \"cor\": \"cinza\",\n    \"combustivel\": \"gasolina\",\n    \"tipo\": \"suv\",\n    \"destaque\": \"suv de luxo com desempenho esportivo e refinamento\"\n  }\n]\n\n",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0982e663-1a21-42cc-9cd7-7d0847894e40",
+      "name": "Local Inventory JSON",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -9840,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "id": "2fa6d2ca-2209-41ff-8334-185b2eb37657",
+      "name": "OpenAI GPT-4o-mini",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -9632,
+        672
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "3mQvgNyUonyTs5Wu",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $('Telegram Trigger').item.json.message.text }}",
+              "rightValue": "humano",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "id-2",
+              "leftValue": "={{ $('Telegram Trigger').item.json.message.text }}",
+              "rightValue": "consultor",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "id-3",
+              "leftValue": "={{ $('Telegram Trigger').item.json.message.text }}",
+              "rightValue": "atendente",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "id-4",
+              "leftValue": "={{ $('Telegram Trigger').item.json.message.text }}",
+              "rightValue": "transferir",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "b6971d40-d07f-44bc-b570-1a50cecdd335",
+      "name": "IF Human Handoff",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -9152,
+        448
+      ]
+    }
+  ],
+  "pinData": {
+    "Telegram Trigger": [
+      {
+        "json": {
+          "update_id": 720354438,
+          "message": {
+            "message_id": 30,
+            "from": {
+              "id": 5724694632,
+              "is_bot": false,
+              "first_name": "Yago",
+              "last_name": "Félix",
+              "username": "yfpq00",
+              "language_code": "pt-br"
+            },
+            "chat": {
+              "id": 5724694632,
+              "first_name": "Yago",
+              "last_name": "Félix",
+              "username": "yfpq00",
+              "type": "private"
+            },
+            "date": 1769535689,
+            "text": "ola"
+          }
+        }
+      }
+    ],
+    "Send Response to Customer": [
+      {
+        "json": {
+          "name": "First item",
+          "code": 1
+        }
+      },
+      {
+        "json": {
+          "name": "Second item",
+          "code": 2
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "Extract Message Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Message Context": {
+      "main": [
+        [
+          {
+            "node": "Local Inventory JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Sales AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Sales Stage": {
+      "main": [
+        [
+          {
+            "node": "Send Response to Customer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Response to Customer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Response to Customer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Response to Customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Human Agent": {
+      "main": [
+        [
+          {
+            "node": "Confirm Handoff to Customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Local Inventory JSON": {
+      "main": [
+        [
+          {
+            "node": "Sales AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI GPT-4o-mini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Sales AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sales AI Agent": {
+      "main": [
+        [
+          {
+            "node": "IF Human Handoff",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Human Handoff": {
+      "main": [
+        [
+          {
+            "node": "Notify Human Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Confirm Handoff to Customer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Response to Customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "7d59a174-8d5a-4b20-b35b-a77b4da99d12",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b0418078153586f2f51c1f1175c92f57de0c12840d4ff727bc507d3216244fd4"
+  },
+  "id": "rdItvyvV8IIYa_g5a2LqX",
+  "tags": []
+}
