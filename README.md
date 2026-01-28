@@ -69,16 +69,16 @@ Entre elas:
 
 - 🔔 Notificação ativa do consultor humano no momento do handoff
 
-Envio automático de mensagem com nome, contato, orçamento e carro de interesse
+  - Envio automático de mensagem com nome, contato, orçamento e carro de interesse
 
-Continuidade do atendimento diretamente via WhatsApp
+  - Continuidade do atendimento diretamente via WhatsApp
 
 
 - 📅 Controle centralizado de agendamentos de test drive
 
-Evitar marcação do mesmo veículo no mesmo horário
+  - Evitar marcação do mesmo veículo no mesmo horário
 
-Visão única de agenda por carro/data
+  - Visão única de agenda por carro/data
 
 
 - 🔁 Estratégias de follow-up para leads que não fecharam no primeiro contato
